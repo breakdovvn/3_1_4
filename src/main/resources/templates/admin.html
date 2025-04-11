@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin page</title>
+</head>
+<body>
+
+<h2>User List</h2>
+
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Firstname</th>
+        <th>Lastname</th>
+        <th>Username</th>
+        <th>Password</th>
+    </tr>
+    <tr th:each="userItem : ${users}">
+        <td th:text="${userItem.id}"></td>
+        <td th:text="${userItem.firstName}"></td>
+        <td th:text="${userItem.lastName}"></td>
+        <td th:text="${userItem.username}"></td>
+        <td th:text="${userItem.password}"></td>
+        <td>
+            <a th:href="@{/admin/edit(id=${userItem.id})}">Edit</a>
+
+            <a th:href="@{/admin/delete(id=${userItem.id})}">Delete</a>
+        </td>
+    </tr>
+</table>
+
+<h3 th:text="${user.id != null} ? 'Edit User' : 'Add New User'"></h3>
+
+<form th:action="${user.id != null} ? @{/admin/edit} : @{/admin/new}"
+      th:object="${user}" method="post">
+
+    <input type="hidden" th:field="*{id}" />
+
+    <label for="firstName">First Name:</label>
+    <input type="text" id="firstName" th:field="*{firstName}" required />
+    <span th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></span>
+
+    <label for="lastName">Last Name:</label>
+    <input type="text" id="lastName" th:field="*{lastName}" required />
+    <span th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></span>
+
+    <label for="username">Username::</label>
+    <input type="text" id="username" th:field="*{username}" required />
+    <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" th:field="*{password}" required />
+    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+
+    <button type="submit"
+            th:text="${user.id != null} ? 'Update' : 'Save'"></button>
+
+    <a th:if="${user.id != null}" href="/admin">
+        <button type="button">Cancel</button>
+    </a>
+</form>
+
+</body>
+</html>
