@@ -32,6 +32,7 @@ public class UserController {
     public String showAdminPanel(Model model) {
         model.addAttribute("users", userService.listUsers());
         model.addAttribute("user", new User());
+        model.addAttribute("allRoles", userService.listRoles());
         return "admin";
     }
 
@@ -39,9 +40,16 @@ public class UserController {
     public String addUser(@Valid @ModelAttribute("user") User user, BindingResult result, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("users", userService.listUsers());
+            model.addAttribute("roles", userService.listRoles());
             return "admin";
         }
-        userService.add(user);
+        try {
+            userService.add(user);
+        } catch (IllegalArgumentException e) {
+            result.rejectValue("username", "error.user", e.getMessage());
+            model.addAttribute("users", userService.listUsers());
+            return "admin";
+        }
         return "redirect:/admin";
     }
 
@@ -49,6 +57,7 @@ public class UserController {
     public String showEditUserForm(@RequestParam("id") Long id, Model model) {
         model.addAttribute("user", userService.getUserById(id));
         model.addAttribute("users", userService.listUsers());
+        model.addAttribute("allRoles", userService.listRoles());
         return "admin";
     }
 
@@ -56,6 +65,7 @@ public class UserController {
     public String updateUser(@Valid @ModelAttribute("user") User user, BindingResult result, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("users", userService.listUsers());
+            model.addAttribute("roles", userService.listRoles());
             return "admin";
         }
         userService.update(user);

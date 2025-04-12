@@ -13,21 +13,29 @@
         <th>ID</th>
         <th>Firstname</th>
         <th>Lastname</th>
+        <th>Roles</th>
         <th>Username</th>
         <th>Password</th>
+        <th>Actions</th>
     </tr>
     <tr th:each="userItem : ${users}">
         <td th:text="${userItem.id}"></td>
         <td th:text="${userItem.firstName}"></td>
         <td th:text="${userItem.lastName}"></td>
+        <td>
+            <ul>
+                <li th:each="role : ${userItem.roles}" th:text="${role.name}"></li>
+            </ul>
+        </td>
         <td th:text="${userItem.username}"></td>
         <td th:text="${userItem.password}"></td>
         <td>
             <a th:href="@{/admin/edit(id=${userItem.id})}">Edit</a>
-
             <a th:href="@{/admin/delete(id=${userItem.id})}">Delete</a>
         </td>
     </tr>
+</table>
+
 </table>
 
 <h3 th:text="${user.id != null} ? 'Edit User' : 'Add New User'"></h3>
@@ -53,12 +61,25 @@
     <input type="password" id="password" th:field="*{password}" required />
     <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
 
+    <label for="roles">Roles:</label>
+    <select id="roles" th:field="*{roles}" multiple required>
+        <option th:each="role : ${allRoles}"
+                th:value="${role.id}"
+                th:text="${role.name}">
+        </option>
+    </select>
+    <span th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}"></span>
+
     <button type="submit"
             th:text="${user.id != null} ? 'Update' : 'Save'"></button>
 
     <a th:if="${user.id != null}" href="/admin">
         <button type="button">Cancel</button>
     </a>
+</form>
+
+<form th:action="@{/logout}" method="post">
+    <button type="submit">Logout</button>
 </form>
 
 </body>

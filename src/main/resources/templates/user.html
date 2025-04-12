@@ -1,15 +1,27 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
 <head>
     <meta charset="UTF-8">
     <title>User page</title>
 </head>
 <body>
-<h1>Привет, <span th:text="${user.firstName} ${user.lastName}">Имя</span>!</h1>
+<h1>Данные пользователя</h1>
+
 <p>ID: <span th:text="${user.id}"></span></p>
+<p>Username: <span th:text="${user.username}"></span></p>
+<p>Имя: <span th:text="${user.firstName}"></span></p>
+<p>Фамилия: <span th:text="${user.lastName}"></span></p>
+
 <p>Роль:</p>
 <ul>
     <li th:each="role : ${user.roles}" th:text="${role.name}"></li>
 </ul>
+
+<form th:action="@{/logout}" method="post">
+    <button type="submit">Logout</button>
+</form>
+
 </body>
 </html>
