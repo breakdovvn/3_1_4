@@ -61,6 +61,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public void update(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(fetchRealRoles(user.getRoles()));
         userRepository.save(user);
     }
