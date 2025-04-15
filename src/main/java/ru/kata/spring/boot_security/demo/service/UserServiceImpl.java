@@ -3,6 +3,7 @@ package ru.kata.spring.boot_security.demo.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repositories.RoleRepository;
@@ -52,12 +53,9 @@ public class UserServiceImpl implements UserService {
     }
 
     public List<User> listUsers() {
-//        return userRepository.findAll();
-        List<User> users = userRepository.findAll();
-        System.out.println("ПОЛЬЗОВАТЕЛИ ИЗ БД:");
-        users.forEach(u -> System.out.println(u.getId() + " " + u.getUsername()));
-        return users;
+        return userRepository.findAll();
     }
+
     public List<Role> listRoles() {
         return roleRepository.findAll();
     }

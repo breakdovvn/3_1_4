@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Controller
 public class UserController {
@@ -30,7 +31,8 @@ public class UserController {
 
     @GetMapping("/admin")
     public String showAdminPanel(Model model) {
-        model.addAttribute("users", userService.listUsers());
+        List<User> users = userService.listUsers();
+        model.addAttribute("users", users);
         model.addAttribute("user", new User());
         model.addAttribute("allRoles", userService.listRoles());
         return "admin";

@@ -41,7 +41,7 @@
 <h3 th:text="${user.id != null} ? 'Edit User' : 'Add New User'"></h3>
 
 <form th:action="${user.id != null} ? @{/admin/edit} : @{/admin/new}"
-      th:object="${user}" method="post">
+      th:object="${user}" method="post" style="display: flex; flex-direction: column; width: 300px;">
 
     <input type="hidden" th:field="*{id}" />
 
@@ -53,30 +53,33 @@
     <input type="text" id="lastName" th:field="*{lastName}" required />
     <span th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></span>
 
-    <label for="username">Username::</label>
+    <label for="username">Username:</label>
     <input type="text" id="username" th:field="*{username}" required />
     <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
 
     <label for="password">Password:</label>
-    <input type="password" id="password" th:field="*{password}" required />
+    <input type="text" id="password" th:field="*{password}" required />
     <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
 
-    <label for="roles">Roles:</label>
-    <select id="roles" th:field="*{roles}" multiple required>
-        <option th:each="role : ${allRoles}"
-                th:value="${role.id}"
-                th:text="${role.name}">
-        </option>
-    </select>
+    <label>Roles:</label>
+    <div th:each="role : ${allRoles}" style="margin-bottom: 10px;">
+        <label>
+            <input type="checkbox"
+                   th:value="${role.id}"
+                   th:field="*{roles}" />
+            <span th:text="${role.name}"></span>
+        </label>
+    </div>
     <span th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}"></span>
 
-    <button type="submit"
+    <button type="submit" style="margin-top: 15px;"
             th:text="${user.id != null} ? 'Update' : 'Save'"></button>
 
     <a th:if="${user.id != null}" href="/admin">
-        <button type="button">Cancel</button>
+        <button type="button" style="margin-top: 10px;">Cancel</button>
     </a>
 </form>
+
 
 <form th:action="@{/logout}" method="post">
     <button type="submit">Logout</button>
