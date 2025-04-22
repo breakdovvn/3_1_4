@@ -1,89 +1,122 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Admin page</title>
 </head>
 <body>
 
-<h2>User List</h2>
+<style>
+    .tab-content > div {
+        display: none;
+    }
+    input[name="tabs"]:checked + label {
+        background-color: #0d6efd;
+        color: white;
+    }
+    #tab1:checked ~ .tab-content #content1,
+    #tab2:checked ~ .tab-content #content2 {
+        display: block;
+    }
+</style>
 
-<table border="1">
-    <tr>
-        <th>ID</th>
-        <th>Firstname</th>
-        <th>Lastname</th>
-        <th>Roles</th>
-        <th>Username</th>
-<!--        <th>Password</th>-->
-        <th>Actions</th>
-    </tr>
-    <tr th:each="userItem : ${users}">
-        <td th:text="${userItem.id}"></td>
-        <td th:text="${userItem.firstName}"></td>
-        <td th:text="${userItem.lastName}"></td>
-        <td>
-            <ul>
-                <li th:each="role : ${userItem.roles}" th:text="${role.name}"></li>
-            </ul>
-        </td>
-        <td th:text="${userItem.username}"></td>
-<!--        <td th:text="${userItem.password}"></td>-->
-        <td>
-            <a th:href="@{/admin/edit(id=${userItem.id})}">Edit</a>
-            <a th:href="@{/admin/delete(id=${userItem.id})}">Delete</a>
-        </td>
-    </tr>
-</table>
-
-</table>
-
-<h3 th:text="${user.id != null} ? 'Edit User' : 'Add New User'"></h3>
-
-<form th:action="${user.id != null} ? @{/admin/edit} : @{/admin/new}"
-      th:object="${user}" method="post" style="display: flex; flex-direction: column; width: 300px;">
-
-    <input type="hidden" th:field="*{id}" />
-
-    <label for="firstName">First Name:</label>
-    <input type="text" id="firstName" th:field="*{firstName}" required />
-    <span th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></span>
-
-    <label for="lastName">Last Name:</label>
-    <input type="text" id="lastName" th:field="*{lastName}" required />
-    <span th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></span>
-
-    <label for="username">Username:</label>
-    <input type="text" id="username" th:field="*{username}" required />
-    <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
-
-    <label for="password">Password:</label>
-    <input type="password" id="password" th:field="*{password}" required />
-    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
-
-    <label>Roles:</label>
-    <div th:each="role : ${allRoles}" style="margin-bottom: 10px;">
-        <label>
-            <input type="checkbox"
-                   th:value="${role.id}"
-                   th:field="*{roles}" />
-            <span th:text="${role.name}"></span>
-        </label>
+<nav class="navbar navbar-dark bg-dark position-relative" style="height: 50px;">
+    <div class="container-fluid d-flex justify-content-start align-items-start">
+        <div class="text-white">
+            User: <span class="fw-bold" th:text="${currentUser.username}"></span> with roles:
+            <span th:each="role, iterStat : ${currentUser.roles}">
+                <span class="fw-bold" th:text="${role.name}"></span><span th:if="${!iterStat.last}">, </span>
+            </span>
+        </div>
     </div>
-    <span th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}"></span>
 
-    <button type="submit" style="margin-top: 15px;"
-            th:text="${user.id != null} ? 'Update' : 'Save'"></button>
-
-    <a th:if="${user.id != null}" href="/admin">
-        <button type="button" style="margin-top: 10px;">Cancel</button>
-    </a>
-</form>
+    <form th:action="@{/logout}" method="post"
+          class="position-absolute" style="bottom: 5px; right: 20px;">
+        <button class="btn btn-outline-danger" type="submit">Logout</button>
+    </form>
+</nav>
 
 
-<form th:action="@{/logout}" method="post">
-    <button type="submit">Logout</button>
-</form>
+<div class="container mt-4 tab-content">
+    <h2>Admin panel</h2>
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-light">
+        <tr>
+            <th colspan="5" class="fs-5">All users</th>
+        </tr>
+        <tr>
+            <th>ID</th>
+            <th>Firstname</th>
+            <th>Lastname</th>
+            <th>Roles</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="userItem : ${users}">
+            <td th:text="${userItem.id}"></td>
+            <td th:text="${userItem.firstName}"></td>
+            <td th:text="${userItem.lastName}"></td>
+            <td>
+                <ul class="list-unstyled mb-0">
+                    <li th:each="role : ${userItem.roles}" th:text="${role.name}"></li>
+                </ul>
+            </td>
+            <td>
+                <a class="btn btn-sm btn-primary" th:href="@{/admin/edit(id=${userItem.id})}">Edit</a>
+                <a class="btn btn-sm btn-danger" th:href="@{/admin/delete(id=${userItem.id})}">Delete</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="container mt-4">
+    <h3 th:text="${user.id != null} ? 'Edit User' : 'Add New User'"></h3>
+    <form th:action="${user.id != null} ? @{/admin/edit} : @{/admin/new}"
+          th:object="${user}" method="post" class="needs-validation" novalidate>
+
+        <input type="hidden" th:field="*{id}" />
+
+        <div class="mb-3">
+            <label for="firstName" class="form-label">First Name:</label>
+            <input type="text" class="form-control" id="firstName" th:field="*{firstName}" required />
+            <div class="text-danger" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label for="lastName" class="form-label">Last Name:</label>
+            <input type="text" class="form-control" id="lastName" th:field="*{lastName}" required />
+            <div class="text-danger" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label for="username" class="form-label">Username:</label>
+            <input type="text" class="form-control" id="username" th:field="*{username}" required />
+            <div class="text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Password:</label>
+            <input type="text" class="form-control" id="password" th:field="*{password}" required />
+            <div class="text-danger" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Roles:</label>
+            <div class="form-check" th:each="role : ${allRoles}">
+                <input class="form-check-input" type="checkbox" th:value="${role.id}" th:field="*{roles}" />
+                <label class="form-check-label" th:text="${role.name}"></label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success" th:text="${user.id != null} ? 'Update' : 'Save'"></button>
+        <a th:if="${user.id != null}" href="/admin" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
 
 </body>
 </html>
