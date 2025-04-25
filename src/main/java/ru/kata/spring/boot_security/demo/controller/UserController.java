@@ -20,8 +20,10 @@ public class UserController {
     }
 
     @GetMapping
-    public String showUserInfo(@AuthenticationPrincipal User user, Model model) {
-        model.addAttribute("user", user);
+    public String showUserInfo(@AuthenticationPrincipal User currentUser, Model model) {
+        model.addAttribute("user", new User());
+        model.addAttribute("allRoles", userService.listRoles());
+        model.addAttribute("currentUser", currentUser);
         return "user";
     }
 }

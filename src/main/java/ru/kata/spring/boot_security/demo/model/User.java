@@ -31,7 +31,7 @@ public class User implements UserDetails {
     @Column(name = "username", unique = true)
     private String username;
 
-    @NotBlank(message = "Пароль не может быть пустым")
+//    @NotBlank(message = "Пароль не может быть пустым")
     @Column(name = "password")
     private String password;
 
