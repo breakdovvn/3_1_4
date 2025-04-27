@@ -4,7 +4,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,7 +32,6 @@ public class User implements UserDetails {
     @Column(name = "username", unique = true)
     private String username;
 
-//    @NotBlank(message = "Пароль не может быть пустым")
     @Column(name = "password")
     private String password;
 
@@ -43,7 +43,8 @@ public class User implements UserDetails {
     )
     private Set<Role> roles = new HashSet<>();
 
-    public User() {}
+    public User() {
+    }
 
     public User(Long id, String username, String password) {
         this.id = id;
@@ -65,6 +66,16 @@ public class User implements UserDetails {
 
     public String getLastName() {
         return lastName;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     public void setId(Long id) {
@@ -94,16 +105,6 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
     }
 
     @Override

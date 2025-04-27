@@ -12,6 +12,4 @@ public interface UserService {
     User getUserById(Long id);
     List<User> listUsers();
     List<Role> listRoles();
-
-    Role getRoleById(Long id);
 }

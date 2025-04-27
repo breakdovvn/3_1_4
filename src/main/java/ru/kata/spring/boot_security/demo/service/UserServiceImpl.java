@@ -1,6 +1,10 @@
 package ru.kata.spring.boot_security.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -9,26 +13,15 @@ import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repositories.RoleRepository;
 import ru.kata.spring.boot_security.demo.repositories.UserRepository;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-
-    private Set<Role> fetchRealRoles(Set<Role> rawRoles) {
-        Set<Role> realRoles = new HashSet<>();
-        for (Role role : rawRoles) {
-            roleRepository.findById(role.getId()).ifPresent(realRoles::add);
-        }
-        return realRoles;
-    }
-
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
@@ -36,6 +29,14 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
+    }
+
+    private Set<Role> fetchRealRoles(Set<Role> rawRoles) {
+        Set<Role> realRoles = new HashSet<>();
+        for (Role role : rawRoles) {
+            roleRepository.findById(role.getId()).ifPresent(realRoles::add);
+        }
+        return realRoles;
     }
 
     public void add(User user) {
@@ -52,11 +53,6 @@ public class UserServiceImpl implements UserService {
         return user.orElse(null);
     }
 
-    public Role getRoleById(Long roleId) {
-        return roleRepository.findById(roleId)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + roleId));
-    }
-
     public List<User> listUsers() {
         return userRepository.findAll();
     }
@@ -66,11 +62,29 @@ public class UserServiceImpl implements UserService {
     }
 
     public void update(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(fetchRealRoles(user.getRoles()));
         userRepository.save(user);
     }
 
     public void delete(Long id) {
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        return user;
+    }
+
+    private Collection<? extends GrantedAuthority> getAuthorities(User user) {
+        return user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
     }
 }
