@@ -67,42 +67,8 @@
                                 <th>Actions</th>
                             </tr>
                             </thead>
-                            <tbody>
-                            <tr th:each="userItem : ${users}">
-                                <td th:text="${userItem.id}"></td>
-                                <td th:text="${userItem.firstName}"></td>
-                                <td th:text="${userItem.lastName}"></td>
-                                <td th:text="${userItem.username}"></td>
-                                <td>
-                                    <ul class="list-unstyled mb-0">
-                                        <li th:each="role : ${userItem.roles}" th:text="${role.name}"></li>
-                                    </ul>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editModal"
-                                            th:attr="data-userid=${userItem.id},
-                                                     data-username=${userItem.username},
-                                                     data-firstname=${userItem.firstName},
-                                                     data-lastname=${userItem.lastName},
-                                                     data-role=${userItem.roles[0].id}">
-                                        Edit
-                                    </button>
+                            <tbody id="usersTableBody">
 
-
-                                    <button class="btn btn-sm btn-danger"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#deleteModal"
-                                            th:attr="data-userid=${userItem.id}, data-username=${userItem.username},
-                                                    data-firstname=${userItem.firstName}, data-lastname=${userItem.lastName},
-                                                    data-id=${userItem.id},
-                                                    data-roles=${#strings.listJoin(userItem.roles, ', ')}">
-                                        Delete
-                                    </button>
-
-                                </td>
-                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -347,6 +313,34 @@
         var modal = new bootstrap.Modal(document.getElementById('editModal'));
         modal.show();
     });
+</script>
+
+<script>
+    async function loadUsers() {
+        const response = await fetch('/api/users');
+        const users = await response.json();
+
+        const tableBody = document.getElementById('usersTableBody');
+        tableBody.innerHTML = '';
+
+        users.forEach(user => {
+            const roles = user.roles.map(role => role.name.replace('ROLE_', '')).join(', ');
+
+            const row = `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.firstName}</td>
+                    <td>${user.lastName}</td>
+                    <td>${user.username}</td>
+                    <td>${roles}</td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    }
+
+    // Загружаем пользователей при открытии страницы
+    window.addEventListener('DOMContentLoaded', loadUsers);
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
