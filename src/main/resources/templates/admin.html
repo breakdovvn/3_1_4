@@ -80,60 +80,46 @@
                  th:classappend="${activeTab} == 'form' ? ' show active' : ''">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0" th:text="'Add New User'"></h5>
+                        <h5 class="mb-0">Add New User</h5>
                     </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-center mt-5">
-                            <form id="addUserForm" th:action="@{/admin/new}" th:object="${user}" method="post"
-                                  class="needs-validation text-center" novalidate
+                            <form id="addUserForm" class="needs-validation text-center" novalidate
                                   style="width: 100%; max-width: 500px;">
                                 <div class="mb-3">
                                     <label for="firstName" class="form-label d-block fw-bold">First Name</label>
-                                    <input type="text" class="form-control mx-auto" id="firstName"
-                                           th:field="*{firstName}" style="max-width: 300px;" required/>
-                                    <div class="text-danger" th:if="${#fields.hasErrors('firstName')}"
-                                         th:errors="*{firstName}"></div>
+                                    <input type="text" class="form-control mx-auto" id="firstName" required style="max-width: 300px;">
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="lastName" class="form-label d-block fw-bold">Last Name</label>
-                                    <input type="text" class="form-control mx-auto" id="lastName" th:field="*{lastName}"
-                                           style="max-width: 300px;" required/>
-                                    <div class="text-danger" th:if="${#fields.hasErrors('lastName')}"
-                                         th:errors="*{lastName}"></div>
+                                    <input type="text" class="form-control mx-auto" id="lastName" required style="max-width: 300px;">
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="username" class="form-label d-block fw-bold">Username</label>
-                                    <input type="text" class="form-control mx-auto" id="username" th:field="*{username}"
-                                           style="max-width: 300px;" required/>
-                                    <div class="text-danger" th:if="${#fields.hasErrors('username')}"
-                                         th:errors="*{username}"></div>
+                                    <input type="text" class="form-control mx-auto" id="username" required style="max-width: 300px;">
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="password" class="form-label d-block fw-bold">Password</label>
-                                    <input type="text" class="form-control mx-auto" id="password" th:field="*{password}"
-                                           style="max-width: 300px;" required/>
-                                    <div class="text-danger" th:if="${#fields.hasErrors('password')}"
-                                         th:errors="*{password}"></div>
+                                    <input type="text" class="form-control mx-auto" id="password" required style="max-width: 300px;">
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="roleSelect" class="form-label fw-bold">Role</label>
-                                    <select class="form-select" id="roleSelect" th:field="*{roles}" required>
-                                        <option disabled selected value="">-- Select a role --</option>
-                                        <option th:each="role : ${allRoles}" th:value="${role.id}"
-                                                th:text="${role.name}"></option>
+                                    <select multiple class="form-select" id="roleSelect" required>
+                                        <option th:each="role : ${allRoles}" th:value="${role.id}" th:data-name="${role.name}" th:text="${role.name}"></option>
                                     </select>
                                 </div>
 
-                                <button type="submit" class="btn btn-success">Add new user</button>
+                                <button type="button" id="addUserButton" class="btn btn-success" class="btn btn-success">Add new user</button>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </main>
 </div>
@@ -168,10 +154,9 @@
                     <div class="mb-3">
                         <label for="editRoles" class="form-label">Roles</label>
                         <select multiple class="form-select" id="editRoles">
-                            <option value="ROLE_ADMIN" data-id="1">ADMIN</option>
-                            <option value="ROLE_USER" data-id="2">USER</option>
+                            <option value="ROLE_USER" data-id="1">USER</option>
+                            <option value="ROLE_ADMIN" data-id="2">ADMIN</option>
                         </select>
-
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -328,25 +313,21 @@
                 }))
         };
 
-        await fetch(`/api/users/${id}`, {
+        const res = await fetch(`/api/users/${id}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text(); // Получаем текст ошибки, если статус не OK
-                }
-                return response.json(); // Если статус OK, парсим как JSON
-            })
-            .then(data => {
-                console.log(data);
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-            });
+            body: JSON.stringify(data),
+        });
+
+        if (res.ok) {
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+            editModal.hide();
+            // window.location.reload();
+        } else {
+            console.error('Error updating user');
+        }
 
         const editModal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
         editModal.show();
@@ -361,9 +342,133 @@
 
         await fetch(`/api/users/${id}`, { method: 'DELETE' });
 
-        bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         await loadUsers();
     });
 </script>
+
+<script>
+    document.getElementById("addUserForm").addEventListener("submit", function (e) {
+        e.preventDefault(); // Отменить стандартное поведение (отправку формы)
+
+        // Собираем данные из формы
+        const data = {
+            firstName: document.getElementById("firstName").value,
+            lastName: document.getElementById("lastName").value,
+            username: document.getElementById("username").value,
+            password: document.getElementById("password").value,
+            roles: Array.from(document.getElementById("roleSelect").selectedOptions).map(option => option.value)
+        };
+
+        // Отправляем данные на сервер через fetch
+        fetch("/api/users", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (response.ok) {
+                    // Если запрос успешен, перезагружаем страницу или обновляем таблицу
+                    location.reload();  // Либо можно закрыть модалку и обновить таблицу
+                } else {
+                    return response.json().then(errors => {
+                        console.error(errors);  // Можно здесь обработать ошибки
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error); // Ловим ошибки сети
+            });
+    });
+</script>
+
+<script>
+    // Функция submitNewUser() будет определена здесь
+    async function submitNewUser() {
+        const form = document.getElementById('addUserForm');
+        // Очистим старые ошибки
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+
+        // Сбор данных
+        const firstName = document.getElementById('firstName');
+        const lastName = document.getElementById('lastName');
+        const username = document.getElementById('username');
+        const password = document.getElementById('password');
+        const rolesSelect = document.getElementById('roleSelect');
+
+        const selectedRoles = [...rolesSelect.selectedOptions].map(option => ({
+            id: parseInt(option.value),
+            name: option.dataset.name
+        }));
+
+        const userData = {
+            firstName: firstName.value.trim(),
+            lastName: lastName.value.trim(),
+            username: username.value.trim(),
+            password: password.value.trim(),
+            roles: selectedRoles
+        };
+
+        // Простая клиентская валидация
+        let hasError = false;
+        if (!userData.firstName) markInvalid(firstName, 'First name is required');
+        if (!userData.lastName) markInvalid(lastName, 'Last name is required');
+        if (!userData.username) markInvalid(username, 'Username is required');
+        if (!userData.password) markInvalid(password, 'Password is required');
+        if (userData.roles.length === 0) markInvalid(rolesSelect, 'At least one role must be selected');
+
+        if (form.querySelector('.is-invalid')) return;
+
+        try {
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(userData)
+            });
+
+            if (!res.ok) {
+                if (res.status === 400) {
+                    const errorJson = await res.json();
+                    handleServerValidationErrors(errorJson);
+                } else {
+                    alert('Server error: ' + res.status);
+                }
+                return;
+            }
+
+            // Успешно — сброс формы, переключение на Users
+            form.reset();
+            bootstrap.Tab.getOrCreateInstance(document.querySelector('button[data-bs-target="#users"]')).show();
+
+        } catch (error) {
+            alert('Network or server error: ' + error.message);
+        }
+
+        function markInvalid(input, message) {
+            input.classList.add('is-invalid');
+            const feedback = document.createElement('div');
+            feedback.classList.add('invalid-feedback');
+            feedback.innerText = message;
+            input.parentElement.appendChild(feedback);
+        }
+
+        function handleServerValidationErrors(errors) {
+            for (const field in errors) {
+                const input = document.getElementById(field);
+                if (input) {
+                    markInvalid(input, errors[field]);
+                }
+            }
+        }
+    }
+
+    // Находим кнопку и назначаем обработчик
+    document.getElementById('addUserButton').addEventListener('click', submitNewUser);
+</script>
+
+
 </body>
 </html>

@@ -67,8 +67,11 @@ public class AdminController {
     }
 
     @PostMapping("/edit")
-    public String updateUser(@Valid @ModelAttribute("user") User user, BindingResult result, Model model,
+    public String updateUser(@Valid @ModelAttribute("user") User user,
+                             BindingResult result,
+                             Model model,
                              @AuthenticationPrincipal User currentUser) {
+
         if (result.hasErrors()) {
             model.addAttribute("users", userService.listUsers());
             model.addAttribute("allRoles", userService.listRoles());
@@ -78,16 +81,11 @@ public class AdminController {
             return "admin";
         }
 
-        User existingUser = userService.getUserById(user.getId());
-
-        if (user.getPassword() == null && user.getPassword().isEmpty()) {
-            user.setPassword(existingUser.getPassword());
-        }
-
         userService.update(user);
 
         return "redirect:/admin";
     }
+
 
 
     @PostMapping("/delete")
