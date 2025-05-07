@@ -1,10 +1,9 @@
 package ru.kata.spring.boot_security.demo.rest;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-import ru.kata.spring.boot_security.demo.DTO.UserDto;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
@@ -35,35 +34,50 @@ public class AdminRestController {
         return userService.getUserById(id);
     }
 
-    // Создать нового пользователя
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody @Valid UserDto userDto, BindingResult result) {
-        if (result.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            for (FieldError error : result.getFieldErrors()) {
-                errors.put(error.getField(), error.getDefaultMessage());
-            }
-            return ResponseEntity.badRequest().body(errors);
+    public ResponseEntity<?> createUser(@RequestBody @Valid User user, BindingResult br) {
+        if (br.hasErrors()) {
+            return ResponseEntity.badRequest().body(getErrors(br));
         }
+        try {
+            userService.add(user);
+            return ResponseEntity.ok(user);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("username", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id,
+                                        @RequestBody @Valid User user,
+                                        BindingResult br) {
+        if (br.hasErrors()) {
+            return ResponseEntity.badRequest().body(getErrors(br));
+        }
+        user.setId(id);
 
         try {
-            userService.createUserFromDto(userDto);
-            return ResponseEntity.ok().build();
+            userService.update(user);
+            return ResponseEntity.ok(userService.getUserById(id));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("username", "Пользователь с таким username уже существует"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", "Unexpected error"));
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("username", e.getMessage()));
         }
     }
 
-    // Обновить пользователя
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-        user.setId(id);
-        userService.update(user);
-        return ResponseEntity.ok(userService.getUserById(id));
-    }
 
+    private Map<String, String> getErrors(BindingResult br) {
+        Map<String, String> errs = new HashMap<>();
+        br.getFieldErrors().forEach(fe -> errs.put(fe.getField(), fe.getDefaultMessage()));
+        return errs;
+    }
 
     // Удалить пользователя
     @DeleteMapping("/{id}")

@@ -88,22 +88,26 @@
                                   style="width: 100%; max-width: 500px;">
                                 <div class="mb-3">
                                     <label for="firstName" class="form-label d-block fw-bold">First Name</label>
-                                    <input type="text" class="form-control mx-auto" id="firstName" required style="max-width: 300px;">
+                                    <input type="text" class="form-control mx-auto" id="firstName" required minlength="3"
+                                           pattern="^[a-zA-Z0-9_]+$" style="max-width: 300px;">
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="lastName" class="form-label d-block fw-bold">Last Name</label>
-                                    <input type="text" class="form-control mx-auto" id="lastName" required style="max-width: 300px;">
+                                    <input type="text" class="form-control mx-auto" id="lastName" required minlength="3"
+                                           pattern="^[a-zA-Z0-9_]+$" style="max-width: 300px;">
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="username" class="form-label d-block fw-bold">Username</label>
-                                    <input type="text" class="form-control mx-auto" id="username" required style="max-width: 300px;">
+                                    <input type="text" class="form-control mx-auto" id="username" required minlength="3"
+                                           pattern="^[a-zA-Z0-9_]+$" style="max-width: 300px;">
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="password" class="form-label d-block fw-bold">Password</label>
-                                    <input type="text" class="form-control mx-auto" id="password" required style="max-width: 300px;">
+                                    <input type="text" class="form-control mx-auto" id="password" required minlength="3"
+                                           pattern="^[a-zA-Z0-9_]+$" style="max-width: 300px;">
                                 </div>
 
                                 <div class="mb-3">
@@ -113,7 +117,7 @@
                                     </select>
                                 </div>
 
-                                <button type="button" id="addUserButton" class="btn btn-success" class="btn btn-success">Add new user</button>
+                                <button type="button" id="addUserButton" class="btn btn-success">Add new user</button>
                             </form>
                         </div>
                     </div>
@@ -137,15 +141,15 @@
                     <input type="hidden" id="editUserId">
                     <div class="mb-3">
                         <label for="editFirstName" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="editFirstName">
+                        <input type="text" minlength="3" pattern="^[a-zA-Z0-9_]+$" class="form-control" id="editFirstName">
                     </div>
                     <div class="mb-3">
                         <label for="editLastName" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="editLastName">
+                        <input type="text" minlength="3" pattern="^[a-zA-Z0-9_]+$" class="form-control" id="editLastName">
                     </div>
                     <div class="mb-3">
                         <label for="editUsername" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="editUsername">
+                        <input type="text" minlength="3" pattern="^[a-zA-Z0-9_]+$" class="form-control" id="editUsername">
                     </div>
                     <div class="mb-3">
                         <label for="editPassword" class="form-label">Password</label>
@@ -154,8 +158,8 @@
                     <div class="mb-3">
                         <label for="editRoles" class="form-label">Roles</label>
                         <select multiple class="form-select" id="editRoles">
-                            <option value="ROLE_USER" data-id="1">USER</option>
-                            <option value="ROLE_ADMIN" data-id="2">ADMIN</option>
+                            <option value="ROLE_USER" data-id="1">ROLE_USER</option>
+                            <option value="ROLE_ADMIN" data-id="2">ROLE_ADMIN</option>
                         </select>
                     </div>
                 </div>
@@ -218,10 +222,8 @@
     </div>
 </div>
 
-
-
-
 <script>
+    // Загрузка списка пользователей
     async function loadUsers() {
         const response = await fetch('/api/users');
         const users = await response.json();
@@ -230,8 +232,7 @@
         tableBody.innerHTML = '';
 
         users.forEach(user => {
-            const roles = user.roles.map(role => role.name.replace('ROLE_', '')).join(', ');
-
+            const roles = user.roles.map(r => r.name).join(', ');
             const row = `
                 <tr>
                     <td>${user.id}</td>
@@ -252,11 +253,10 @@
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', async (e) => {
+            // Открытие модалки редактирования
             const editBtn = e.target.closest('.btn-edit');
-            const deleteBtn = e.target.closest('.btn-delete');
-
             if (editBtn) {
                 const userId = editBtn.dataset.userid;
                 const res = await fetch(`/api/users/${userId}`);
@@ -273,10 +273,11 @@
                     option.selected = user.roles.some(r => r.name === option.value);
                 });
 
-                const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
-                editModal.show();
+                new bootstrap.Modal(document.getElementById('editUserModal')).show();
             }
 
+            // Открытие модалки удаления
+            const deleteBtn = e.target.closest('.btn-delete');
             if (deleteBtn) {
                 const userId = deleteBtn.dataset.userid;
                 const res = await fetch(`/api/users/${userId}`);
@@ -287,188 +288,225 @@
                 document.getElementById('deleteUsername').value = user.username;
                 document.getElementById('deleteFirstName').value = user.firstName;
                 document.getElementById('deleteLastName').value = user.lastName;
-                document.getElementById('deleteRoles').value = user.roles.map(role => role.name.replace('ROLE_', '')).join(', ');
+                document.getElementById('deleteRoles').value = user.roles.map(r => r.name).join(', ');
 
                 new bootstrap.Modal(document.getElementById('deleteModal')).show();
             }
         });
     });
+</script>
 
-
-    // Отправка изменений (PUT)
+<script>
+    // Валидация и отправка изменений (PUT)
     document.getElementById('editUserForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const id = document.getElementById('editUserId').value;
-        const data = {
-            id: id,
-            firstName: document.getElementById('editFirstName').value,
-            lastName: document.getElementById('editLastName').value,
-            username: document.getElementById('editUsername').value,
-            password: document.getElementById('editPassword').value,
-            roles: [...document.getElementById('editRoles').selectedOptions]
-                .map(o => ({
-                    id: parseInt(o.dataset.id),
-                    name: o.value
-                }))
-        };
+        // очистка старых ошибок
+        const form = e.target;
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
 
-        const res = await fetch(`/api/users/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
+        const nameRegex = /^[А-Яа-яA-Za-z]+$/;
+        let valid = true;
 
-        if (res.ok) {
-            const editModal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
-            editModal.hide();
-            // window.location.reload();
-        } else {
-            console.error('Error updating user');
+        const id          = document.getElementById('editUserId').value;
+        const firstName   = document.getElementById('editFirstName');
+        const lastName    = document.getElementById('editLastName');
+        const username    = document.getElementById('editUsername');
+        const password    = document.getElementById('editPassword');
+        const rolesSelect = document.getElementById('editRoles');
+
+        // валидация firstName
+        if (!firstName.value.trim() || !nameRegex.test(firstName.value.trim())) {
+            markInvalid(firstName, 'Имя должно быть буквами и не пустым');
+            valid = false;
+        }
+        // валидация lastName
+        if (!lastName.value.trim() || !nameRegex.test(lastName.value.trim())) {
+            markInvalid(lastName, 'Фамилия должна быть буквами и не пустой');
+            valid = false;
+        }
+        // валидация username
+        if (!username.value.trim()) {
+            markInvalid(username, 'Имя пользователя не может быть пустым');
+            valid = false;
+        }
+        // роли
+        const selectedRoles = [...rolesSelect.selectedOptions];
+        if (selectedRoles.length === 0) {
+            markInvalid(rolesSelect, 'Нужно выбрать хотя бы одну роль');
+            valid = false;
         }
 
-        const editModal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
-        editModal.show();
-        await loadUsers();
-    });
+        if (!valid) return;
 
-    // Удаление пользователя (DELETE)
+        // собираем данные
+        const data = {
+            id:        id,
+            firstName: firstName.value.trim(),
+            lastName:  lastName.value.trim(),
+            username:  username.value.trim(),
+            password:  password.value,  // можно пустым
+            roles:     selectedRoles.map(o => ({ id: parseInt(o.dataset.id), name: o.value }))
+        };
+
+        try {
+            const res = await fetch(`/api/users/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                await loadUsers();
+            } else if (res.status === 400) {
+                const err = await res.json();
+                handleServerValidationErrors(err);
+            } else {
+                console.error('Ошибка обновления');
+            }
+        } catch (err) {
+            console.error('Ошибка запроса:', err);
+        }
+
+        function markInvalid(el, msg) {
+            el.classList.add('is-invalid');
+            const fb = document.createElement('div');
+            fb.className = 'invalid-feedback';
+            fb.innerText = msg;
+            el.parentNode.appendChild(fb);
+        }
+
+        function handleServerValidationErrors(errors) {
+            for (const field in errors) {
+                const fieldMap = {
+                    username: username,
+                    firstName: firstName,
+                    lastName: lastName,
+                    password: password,
+                    roles: rolesSelect
+                };
+                if (fieldMap[field]) {
+                    markInvalid(fieldMap[field], errors[field]);
+                }
+            }
+        }
+    });
+</script>
+
+
+<script>
+    // Отправка удаления
     document.getElementById('deleteUserForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const id = document.getElementById('deleteUserId').value;
-
         await fetch(`/api/users/${id}`, { method: 'DELETE' });
-
         bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
         await loadUsers();
     });
 </script>
 
 <script>
-    document.getElementById("addUserForm").addEventListener("submit", function (e) {
-        e.preventDefault(); // Отменить стандартное поведение (отправку формы)
+    // Валидация и добавление нового пользователя (POST)
+    document.getElementById('addUserButton').addEventListener('click', async () => {
+        const form        = document.getElementById('addUserForm');
+        const nameRegex   = /^[А-Яа-яA-Za-z]+$/;
+        let valid         = true;
 
-        // Собираем данные из формы
-        const data = {
-            firstName: document.getElementById("firstName").value,
-            lastName: document.getElementById("lastName").value,
-            username: document.getElementById("username").value,
-            password: document.getElementById("password").value,
-            roles: Array.from(document.getElementById("roleSelect").selectedOptions).map(option => option.value)
-        };
-
-        // Отправляем данные на сервер через fetch
-        fetch("/api/users", {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                if (response.ok) {
-                    // Если запрос успешен, перезагружаем страницу или обновляем таблицу
-                    location.reload();  // Либо можно закрыть модалку и обновить таблицу
-                } else {
-                    return response.json().then(errors => {
-                        console.error(errors);  // Можно здесь обработать ошибки
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error); // Ловим ошибки сети
-            });
-    });
-</script>
-
-<script>
-    // Функция submitNewUser() будет определена здесь
-    async function submitNewUser() {
-        const form = document.getElementById('addUserForm');
-        // Очистим старые ошибки
+        // очистка старых ошибок
         form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
         form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
 
-        // Сбор данных
-        const firstName = document.getElementById('firstName');
-        const lastName = document.getElementById('lastName');
-        const username = document.getElementById('username');
-        const password = document.getElementById('password');
+        const firstName   = document.getElementById('firstName');
+        const lastName    = document.getElementById('lastName');
+        const username    = document.getElementById('username');
+        const password    = document.getElementById('password');
         const rolesSelect = document.getElementById('roleSelect');
 
-        const selectedRoles = [...rolesSelect.selectedOptions].map(option => ({
-            id: parseInt(option.value),
-            name: option.dataset.name
-        }));
+        // client-side валидация по правилам модели
+        if (!firstName.value.trim() || !nameRegex.test(firstName.value.trim())) {
+            markInvalid(firstName, 'Имя должно быть буквами и не пустым');
+            valid = false;
+        }
+        if (!lastName.value.trim() || !nameRegex.test(lastName.value.trim())) {
+            markInvalid(lastName, 'Фамилия должна быть буквами и не пустой');
+            valid = false;
+        }
+        if (!username.value.trim()) {
+            markInvalid(username, 'Имя пользователя не может быть пустым');
+            valid = false;
+        }
+        if (!password.value.trim()) {
+            markInvalid(password, 'Пароль не может быть пустым');
+            valid = false;
+        }
+        const selected = [...rolesSelect.selectedOptions];
+        if (selected.length === 0) {
+            markInvalid(rolesSelect, 'Нужно выбрать хотя бы одну роль');
+            valid = false;
+        }
+        if (!valid) return;
 
+        // собираем данные
         const userData = {
             firstName: firstName.value.trim(),
-            lastName: lastName.value.trim(),
-            username: username.value.trim(),
-            password: password.value.trim(),
-            roles: selectedRoles
+            lastName:  lastName.value.trim(),
+            username:  username.value.trim(),
+            password:  password.value.trim(),
+            roles:     selected.map(o => ({ id: parseInt(o.value), name: o.dataset.name }))
         };
 
-        // Простая клиентская валидация
-        let hasError = false;
-        if (!userData.firstName) markInvalid(firstName, 'First name is required');
-        if (!userData.lastName) markInvalid(lastName, 'Last name is required');
-        if (!userData.username) markInvalid(username, 'Username is required');
-        if (!userData.password) markInvalid(password, 'Password is required');
-        if (userData.roles.length === 0) markInvalid(rolesSelect, 'At least one role must be selected');
+        // POST на сервер
+        const res = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
 
-        if (form.querySelector('.is-invalid')) return;
-
-        try {
-            const res = await fetch('/api/users', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(userData)
-            });
-
-            if (!res.ok) {
-                if (res.status === 400) {
-                    const errorJson = await res.json();
-                    handleServerValidationErrors(errorJson);
-                } else {
-                    alert('Server error: ' + res.status);
-                }
-                return;
-            }
-
-            // Успешно — сброс формы, переключение на Users
+        if (res.ok) {
+            const newUser = await res.json();
+            addUserToTable(newUser);
             form.reset();
             bootstrap.Tab.getOrCreateInstance(document.querySelector('button[data-bs-target="#users"]')).show();
-
-        } catch (error) {
-            alert('Network or server error: ' + error.message);
+        } else if (res.status === 400) {
+            const errs = await res.json();
+            handleServerValidationErrors(errs);
+        } else {
+            alert('Ошибка сервера: ' + res.status);
         }
 
-        function markInvalid(input, message) {
-            input.classList.add('is-invalid');
-            const feedback = document.createElement('div');
-            feedback.classList.add('invalid-feedback');
-            feedback.innerText = message;
-            input.parentElement.appendChild(feedback);
+        function markInvalid(el, msg) {
+            el.classList.add('is-invalid');
+            const fb = document.createElement('div');
+            fb.className = 'invalid-feedback';
+            fb.innerText = msg;
+            el.parentNode.appendChild(fb);
         }
-
         function handleServerValidationErrors(errors) {
             for (const field in errors) {
                 const input = document.getElementById(field);
-                if (input) {
-                    markInvalid(input, errors[field]);
-                }
+                if (input) markInvalid(input, errors[field]);
             }
         }
-    }
-
-    // Находим кнопку и назначаем обработчик
-    document.getElementById('addUserButton').addEventListener('click', submitNewUser);
+        function addUserToTable(user) {
+            const tbody = document.getElementById('usersTableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.firstName}</td>
+                <td>${user.lastName}</td>
+                <td>${user.username}</td>
+                <td>${user.roles.map(r => r.name).join(', ')}</td>
+                <td>
+                    <button class="btn btn-info btn-sm btn-edit" data-userid="${user.id}">Edit</button>
+                    <button class="btn btn-danger btn-sm btn-delete" data-userid="${user.id}">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+    });
 </script>
-
 
 </body>
 </html>

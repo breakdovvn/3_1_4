@@ -9,4 +9,5 @@ import ru.kata.spring.boot_security.demo.model.User;
 public interface UserRepository extends JpaRepository<User, Long> {
     @EntityGraph(attributePaths = "roles")
     User findByUsername(String username);
+    boolean existsByUsername(String username);
 }

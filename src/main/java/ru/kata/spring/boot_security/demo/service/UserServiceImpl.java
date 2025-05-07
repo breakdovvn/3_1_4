@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import ru.kata.spring.boot_security.demo.DTO.UserDto;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repositories.RoleRepository;
@@ -49,22 +48,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         userRepository.save(user);
     }
 
-    public void createUserFromDto(UserDto dto) {
-        User user = new User();
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
-        user.setUsername(dto.getUsername());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
-
-        List<Role> roles = roleRepository.findAllById(dto.getRoles());
-        if (roles.isEmpty()) {
-            throw new IllegalArgumentException("Invalid roles provided");
-        }
-        user.setRoles(new HashSet<>(roles));
-
-        userRepository.save(user);
-    }
-
     public User getUserById(Long id) {
         Optional<User> user = userRepository.findById(id);
         return user.orElse(null);
@@ -80,6 +63,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     public void update(User updatedUser) {
         User existingUser = getUserById(updatedUser.getId());
+
+        // Проверяем, изменился ли username
+        if (!existingUser.getUsername().equals(updatedUser.getUsername())) {
+            // Проверяем, что новый username уникален
+            if (userRepository.existsByUsername(updatedUser.getUsername())) {
+                throw new IllegalArgumentException("Пользователь с таким username уже существует");
+            }
+        }
 
         existingUser.setFirstName(updatedUser.getFirstName());
         existingUser.setLastName(updatedUser.getLastName());
