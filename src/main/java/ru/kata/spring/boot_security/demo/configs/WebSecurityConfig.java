@@ -23,6 +23,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .csrf().disable()
                 .authorizeRequests()
+                .antMatchers("/api/users/**").hasRole("ADMIN") // CRUD по пользователям — только ADMIN
+                .antMatchers("/api/currentUser").hasAnyRole("USER", "ADMIN") // доступ к себе — USER и ADMIN
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/user").hasAnyRole("USER", "ADMIN")
                 .antMatchers("/", "/index").permitAll()

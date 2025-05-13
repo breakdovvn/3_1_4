@@ -64,9 +64,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public void update(User updatedUser) {
         User existingUser = getUserById(updatedUser.getId());
 
-        // Проверяем, изменился ли username
         if (!existingUser.getUsername().equals(updatedUser.getUsername())) {
-            // Проверяем, что новый username уникален
             if (userRepository.existsByUsername(updatedUser.getUsername())) {
                 throw new IllegalArgumentException("Пользователь с таким username уже существует");
             }
@@ -75,7 +73,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         existingUser.setFirstName(updatedUser.getFirstName());
         existingUser.setLastName(updatedUser.getLastName());
         existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setRoles(updatedUser.getRoles());
+        existingUser.setRoles(fetchRealRoles(updatedUser.getRoles()));
 
         if (updatedUser.getPassword() != null && !updatedUser.getPassword().isBlank()) {
             existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));

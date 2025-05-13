@@ -15,10 +15,8 @@
 <nav class="navbar navbar-dark bg-dark fixed-top" style="height: 50px;">
     <div class="container-fluid d-flex justify-content-start align-items-start">
         <div class="text-white">
-            User: <span class="fw-bold" th:text="${currentUser.username}"></span> with roles:
-            <span th:each="role, iterStat : ${currentUser.roles}">
-                <span class="fw-bold" th:text="${role.name}"></span><span th:if="${!iterStat.last}">, </span>
-            </span>
+            User: <span id="current-username" class="fw-bold"></span> with roles:
+            <span id="current-roles"></span>
         </div>
     </div>
 
@@ -32,7 +30,6 @@
     <!-- SIDEBAR -->
     <div th:replace="fragments/sidebar :: sidebar"></div>
 
-    <!-- MAIN CONTENT -->
     <main class="col-md-10 ms-5 px-md-4 py-4">
         <h2>User information-page</h2>
         <div class="card">
@@ -44,22 +41,20 @@
                     <thead class="table-light">
                     <tr>
                         <th>ID</th>
-                        <th>Username</th>
                         <th>Firstname</th>
                         <th>Lastname</th>
+                        <th>Username</th>
                         <th>Roles</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr>
-                        <td th:text="${currentUser.id}">1</td>
-                        <td th:text="${currentUser.username}">johndoe</td>
-                        <td th:text="${currentUser.firstName}">Иван</td>
-                        <td th:text="${currentUser.lastName}">Иванов</td>
+                        <td id="user-id"></td>
+                        <td id="user-firstname"></td>
+                        <td id="user-lastname"></td>
+                        <td id="user-username"></td>
                         <td>
-                            <ul class="list-unstyled mb-0">
-                                <li th:each="role : ${currentUser.roles}" th:text="${role.name}">ROLE_USER</li>
-                            </ul>
+                            <ul id="user-roles" class="list-unstyled mb-0"></ul>
                         </td>
                     </tr>
                     </tbody>
@@ -68,5 +63,36 @@
         </div>
     </main>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        fetch("/api/currentUser")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Ошибка получения данных пользователя");
+                }
+                return response.json();
+            })
+            .then(user => {
+                document.getElementById("user-id").textContent = user.id;
+                document.getElementById("user-username").textContent = user.username;
+                document.getElementById("user-firstname").textContent = user.firstName;
+                document.getElementById("user-lastname").textContent = user.lastName;
+
+                const rolesList = document.getElementById("user-roles");
+                rolesList.innerHTML = "";
+                user.roles.forEach(role => {
+                    const li = document.createElement("li");
+                    li.textContent = role.name;
+                    rolesList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error("Ошибка:", error);
+            });
+    });
+</script>
+
+
 </body>
 </html>

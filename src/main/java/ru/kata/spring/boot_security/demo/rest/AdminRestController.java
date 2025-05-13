@@ -59,6 +59,7 @@ public class AdminRestController {
         user.setId(id);
 
         try {
+            user.setId(id);
             userService.update(user);
             return ResponseEntity.ok(userService.getUserById(id));
         } catch (DataIntegrityViolationException e) {
